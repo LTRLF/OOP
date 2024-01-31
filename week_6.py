@@ -8,9 +8,12 @@ class User:
     def add_account(self, User_Account):
         self.__account_list.append(User_Account)
 
+    def get_account(self):
+        return self.__account_list
+
 class User_Account:
-    def __init__ (self, accountNo, balance, user):
-        self.__accountNo = accountNo
+    def __init__ (self, account_no, balance, user):
+        self.__accountNo = account_no
         self.__balance = balance
         self.__transaction_list = []
         self.__atm_card = None
@@ -18,44 +21,89 @@ class User_Account:
         self.__user = user
 
     @property
-    def card_holder(self):
+    def atm_list_card(self):
         return self.__atm_card
-
-    def updateBalance(self, balance):
-        pass
-    def addTransaction(self, transaction_list):
+    def add_transaction(self, transaction_list):
         self.__transaction_list.append(transaction_list)
-    def addCard(self):
+    def add_card(self):
         pass
 
 class ATM:
-    def __init__(self, atmNo, balance):
-        self.__atmNo = atmNo
+    withdraw_limit = 40000
+
+    def __init__(self, atm_no, balance):
+        self.__atmNo = atm_no
         self.__balance = balance
 
-    def updateBalance(self, balance):
-        pass
+    def deposit(self, account_info, amount):
+        if amount > 0 and amount <= account_info.balance:
+            account_info.balance += amount
+            account_info.add_transaction(Transaction('D', amount, self.__atmNo, account_info.balance))
+            return 'Success'
+        else:
+            return 'Error'
+
+    def withdraw(self, account_info, amount):
+        if amount > 0 and amount <= ATM.withdraw_limit:
+            account_info.balance -= amount
+            account_info.add_transaction(Transaction('W', amount, self.__atmNo, account_info.balance))
+            return 'Success'
+        else:
+            return 'Error'
+
+    def transfer(self, account_info, target_account, amount):
+        if amount > 0 and account_info.balance >= amount:
+            account_info.balance -= amount
+            target_account.balance += amount
+            account_info.add_transaction(Transaction('T-', amount, self.__atmNo, account_info.balance))
+            target_account.add_transaction(Transaction('T+', amount, self.__atmNo, target_account.balance))
+            return 'Success'
+        else:
+            return 'Error'
+
+    def insert_card(self, bank_info, ATM_Card, input_pin):\
+        #วน user ใน bank
+        for that_user in Bank.usr_list():
+            #วน account ใน user
+            for that_account in that_user.get_account():
+                if that_account.atm_list_card().card_no == ATM_Card.account_no and that_account.atm_list_card().pin == ATM_Card.pin:
+                    return that_account
+                    
+                return None
 
 class ATM_Card:
-    def __init__(self, cardNo, pin):
-        self.__cardNo = cardNo
+    def __init__(self, card_no, pin):
+        self.__cardNo = card_no
         self.__pin = pin
 
 class Bank:
-    def __init__(self, user_list, atm_list):
+    def __init__(self):
         self.__user_list = []
         self.__atm_list = []
 
-    def addUser(self, user):
+    def add_user(self, user):
         self.__user_list.append(user)
 
-    def cardFee(user_list):
-        for thatUser in user_list:
-            for thatAccount in thatUser:
-                #สำหรับ account นั้นใน user นั้น จะไปเรียก card_holder(atm_card) มา 
-                if thatUser.thatAccount.card_holder != None:
+    def add_atm(self, atm):
+        self.__atm_list.append(atm)
+
+    def card_fee(self, user_list):
+        for that_user in user_list:
+            for that_account in that_user:
+                #สำหรับ account นั้นใน user นั้น จะไปเรียก atm_list_card(atm_card) มา 
+                if that_user.that_account.atm_list_card != None:
                     #ถ้า card exist ให้ set current balance -150
-                    thatUser.thatAccount.balance -= 150
+                    that_user.that_account.balance -= 150
+
+    @property
+    def user_list(self):
+        return self.__user_list
+    # @property
+    # def atm_list(self):
+    #     return self.__atm_list
+
+    def get_atm(self):
+        return self.__atm_list
 
 class Transaction:
     def __init__(self, transact_type, amount, date, time, atmNo):
@@ -72,8 +120,8 @@ class Transaction:
 
 # กำหนดรูปแบบของ user ดังนี้ {รหัสประชาชน : [ชื่อ, หมายเลขบัญชี, หมายเลข ATM, จำนวนเงิน ]}
 # *** Dictionary นี้ ใช้สำหรับสร้าง user และ atm instance เท่านั้น
-user ={'1-1101-12345-12-0':['Harry Potter'         ,'1234567890','12345',20000],
-       '1-1101-12345-13-0':['Hermione Jean Granger','0987654321','12346',1000]}
+user ={'1-1101-12345-42-0':['Harry Potter'         ,'1234567890','12345',20000],
+       '1-1101-12345-43-0':['Hermione Jean Granger','0987654321','12346',1000]}
 
 atm ={'1001':1000000,'1002':200000}
 
@@ -83,14 +131,22 @@ atm ={'1001':1000000,'1002':200000}
 # TODO :   return เป็น instance ของธนาคาร
 # TODO :   และสร้าง instance ของเครื่อง ATM จำนวน 2 เครื่อง
 
-def create_user(user):
-    Bank.user_list.append(user)
-    pass
+def create_data(user,atm):
+    bank_info = Bank()
+    #.items() แยกตัว key, value ใน dictionary ออกเป็นสองก้อน
+    for key,value in user.items():
+        user_info = User(key,value[0])     
+        account_info = User_Account(value[1], value[3], user_info)
+        user_info.add_account(account_info)
+        bank_info.add_user(user_info)
 
-def create_atm(atm):
+    for key,value in atm.items():
+        atm_info = ATM(key,value)
+        bank_info.add_atm(atm_info)
 
-    pass
+    return bank_info
 
+bank = create_data(user,atm)
 
 # TODO 2 : เขียน method ที่ทำหน้าที่สอดบัตรเข้าเครื่อง ATM มี parameter 3 ตัว ได้แก่ 1) instance ของธนาคาร
 # TODO     2) instance ของ atm_card 3) entered Pin ที่ user input ให้เครื่อง ATM
