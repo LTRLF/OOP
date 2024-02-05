@@ -68,7 +68,7 @@ class User_Account:
         return self.__balance
     @cur_balance.setter
     def cur_balance(self, new_balance):
-        self.__cur_balance = new_balance
+        self.__balance = new_balance
     
     @property
     def transaction_list(self):
@@ -107,10 +107,10 @@ class ATM:
 
     def transfer(self, account_info, target_account, amount):
         if amount > 0 and account_info.cur_balance >= amount and isinstance(account_info,User_Account) and isinstance(target_account,User_Account):
-            transaction_out = Transaction('T-', amount, self.__atmNo, target_account)
+            transaction_out = Transaction('T-', amount, 'today', self.__atmNo, target_account)
             transaction_out.add_target_account(target_account)
             if account_info.acctransfer(transaction_out) == "complete":
-                transaction_in = Transaction('T+', amount, self.__atmNo, target_account)
+                transaction_in = Transaction('T+', amount, 'today', self.__atmNo, target_account)
                 transaction_in.add_target_account(target_account)
                 target_account.acctransfer(transaction_in)
                 return 'Success'
@@ -329,4 +329,4 @@ print(f"Hermione account after test : {HermioneAcc.cur_balance}")
 # Hermione transaction : T-ATM:1002-+10000-11500
 print("Test case #7")
 for all_transaction in HermioneAcc.transaction_list:
-    print(all_transaction)
+    print("Hermione transaction : ", all_transaction)
