@@ -41,22 +41,23 @@ class User_Account:
             return "invalid"
     
     def acctransfer(self,transaction):
-        if transaction.amount > 0 and transaction.amount <= self.__balance and isinstance(transaction,Transaction):
+        if transaction.amount > 0 and isinstance(transaction,Transaction):
             #check ว่าเป็นแอคเดียวกันไหม
-            if self != transaction.target_account:
+            if self == transaction.target_account:
                 #update transfer account and make transaction record
-                self.cur_balance -= transaction.amount
-                self.add_transaction(transaction)
-                #update target_account and make transaction record
-                target_account = transaction.target_account
-                target_account.__balance += transaction.amount
-                target_account.add_transaction(transaction)
-                return "complete"
+                self.__balance += transaction.amount
             else:
-                return "Error"
-        else:
-            return "invalid"
-
+                if transaction.amount <= self.__balance:
+                    self.__balance -= transaction.amount
+                else:
+                    return "Error"
+                #update target_account and make transaction record
+            transaction.total_balance = self.__balance
+            self.add_transaction(transaction)
+                #target_account = transaction.target_account
+                #target_account.add_transaction(transaction)
+            return "complete"
+        return "invalid"
     @property
     def atm_card(self):
         return self.__atm_card
@@ -108,10 +109,8 @@ class ATM:
     def transfer(self, account_info, target_account, amount):
         if amount > 0 and account_info.cur_balance >= amount and isinstance(account_info,User_Account) and isinstance(target_account,User_Account):
             transaction_out = Transaction('T-', amount, 'today', self.__atmNo, target_account)
-            transaction_out.add_target_account(target_account)
             if account_info.acctransfer(transaction_out) == "complete":
                 transaction_in = Transaction('T+', amount, 'today', self.__atmNo, target_account)
-                transaction_in.add_target_account(target_account)
                 target_account.acctransfer(transaction_in)
                 return 'Success'
             else:
