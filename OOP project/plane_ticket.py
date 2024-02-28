@@ -1,3 +1,4 @@
+
 class Controller:
     def __init__(self,name):
         self.__name = name
@@ -36,13 +37,13 @@ class Guest:
         self.__guest_id = guest_id
 
 class User(Guest):
-    def __init__(self,email,user_id,booking_list):
+    def __init__(self,email,user_id,):
         self.__email = email
         self.__user_id = user_id
         self.__booking_list = []
 
 class Booking:
-    def __init__(self,booking_no,passenger_list,destination,departure,departure_date_time,arriving_date_time):
+    def __init__(self,booking_no,destination,departure,departure_date_time,arriving_date_time):
         self.__booking_no = booking_no
         self.__passenger_list = []
         self.__destination = destination
